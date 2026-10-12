@@ -3,6 +3,7 @@ Reusable wx application configuration
 """
 
 import ctypes
+import os
 import re
 from contextlib import suppress
 from dataclasses import dataclass
@@ -54,6 +55,22 @@ class AppConfig:
             raise FileNotFoundError(f"Application icon was not found: {icon}.")
 
         return icon
+
+    def config_path(self):
+        """Returns the per-user application config directory.
+
+        Windows: %APPDATA\\app-name
+        macOS: ~/Library/Application Support/app-name
+        Linux: $XDG_DATA_HOME/app-name (or ~/.local/share/app-name)
+        """
+        if uname == "win":
+            base = os.environ.get("APPDATA") or str(Path.home() / "AppData" / "Roaming")
+        elif uname == "darwin":
+            base = Path.home() / "Library" / "Application Support"
+        else:
+            base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+
+        return Path(base) / self.name
 
 
 class WxApplication(wx.App, wx.lib.mixins.inspection.InspectionMixin):
